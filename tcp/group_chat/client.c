@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #define BUFFER_SIZE 256
-#define N_CLIENT 3
+#define N_CLIENT 2
 
 
 void error(char *msg) {

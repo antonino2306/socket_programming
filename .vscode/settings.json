@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "in.h": "c"
+        "*.ndjson": "jsonl",
+        "*.dbclient-js": "javascript",
+        "in.h": "c",
+        "buffer": "c",
+        "stdlib.h": "c"
     }
 }
