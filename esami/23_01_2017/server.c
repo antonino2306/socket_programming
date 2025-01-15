@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
                     return 0;
                 }
 
-                char * client_name = buffer + strlen(cli_msg);
+                char * client_name = &buffer[strlen(cli_msg)];
                 client_name[strlen(client_name)-1] = '\0';
 
                 char response[256];

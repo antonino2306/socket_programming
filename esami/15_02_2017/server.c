@@ -67,45 +67,42 @@ int main(int argc, char *argv[]) {
 
             close(sockfd);
 
-            // do {
+            do {
+                bzero(buffer, BUFFER_SIZE);
+                sleep(1);
+                printf("Trasmission turn: %d\n", trasmission_turn);
+                char auth[] = "1\n";
+                int n = write(newsockfd[trasmission_turn], auth, strlen(auth)+1);
 
-                do {
-                    bzero(buffer, BUFFER_SIZE);
-                    printf("Trasmission turn: %d\n", trasmission_turn);
-                    char *auth = "1\n";
-                    int n = write(newsockfd[trasmission_turn], auth, strlen(auth)+1);
 
+                if (n < 0) {
+                    error("Error on writing");
+                }
 
-                    if (n < 0) {
-                        error("Error on writing");
-                    }
+                printf("Ho inviato %d byte\n", n);
 
-                    printf("Ho inviato %d byte\n", n);
+                if (read(newsockfd[trasmission_turn], buffer, BUFFER_SIZE) < 0) {
+                    error("Error on reading");
+                }
 
-                    if (read(newsockfd[trasmission_turn], buffer, BUFFER_SIZE) < 0) {
-                        error("Error on reading");
-                    }
+                for (int i = 0; i < N_CLIENT; i++) {
 
-                    for (int i = 0; i < N_CLIENT; i++) {
-
-                        if (i != trasmission_turn) {
-                            if (write(newsockfd[i], buffer, strlen(buffer)+1) < 0) {
-                                error("Error sending message");
-                            }
+                    if (i != trasmission_turn) {
+                        if (write(newsockfd[i], buffer, strlen(buffer)+1) < 0) {
+                            error("Error sending message");
                         }
-
                     }
 
-                    trasmission_turn++;
-                    if (trasmission_turn == N_CLIENT) {
-                        trasmission_turn = 0;
-                    }
+                }
+
+                trasmission_turn++;
+                if (trasmission_turn == N_CLIENT) {
+                    trasmission_turn = 0;
+                }
 
 
-                } while (strcmp(buffer, "QUIT") != 0);
+            } while (strcmp(buffer, "QUIT") != 0);
 
-
-            // } while (strcmp(buffer, "QUIT") != 0);
             
             for (int i = 0; i < N_CLIENT; i++) {
                 close(newsockfd[i]);

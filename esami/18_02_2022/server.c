@@ -47,42 +47,62 @@ int main(int argc, char *argv[]) {
         error("Error on binding");
     }
 
-    int n_try = 0;
     clilen = sizeof(cli_addr);
-    while (n_try < 3) {
-    
+    int win = 0;
+    while(!win) {
+        int n_try = 0;
+        struct sockaddr_in actual_player;
+        bzero((char*)&actual_player, clilen);
 
-        if (recvfrom(sockfd, buffer, 255, 0, (struct sockaddr *)&cli_addr, (socklen_t*)&clilen) < 0) {
-            error("Error on recive");
-        }
-
-        if (atoi(buffer) == random_number) {
-            char * msg = "Hai vinto";
-            if (sendto(sockfd, msg, strlen(msg)+1, 0, (struct sockaddr*)&cli_addr, clilen) < 0) {
-                error("Error sending messagge");
+        while (n_try < 3) {
+            printf("Tentativi: %d\n", n_try);
+            bzero((char*)&cli_addr, clilen);
+            if (recvfrom(sockfd, buffer, 255, 0, (struct sockaddr *)&cli_addr, (socklen_t*)&clilen) < 0) {
+                error("Error on recive");
             }
-            break;
-        }
-        else  {
-            n_try++;
-            if (n_try == 3) {
-                char * msg = "Hai perso";
-                if (sendto(sockfd, msg, strlen(msg)+1, 0, (struct sockaddr*)&cli_addr, clilen) < 0) {
+
+            if (n_try == 0) {
+                bcopy((char*)&cli_addr, (char*)&actual_player, clilen);
+            }
+            else if (memcmp((char*)&cli_addr, (char*)&actual_player, clilen) != 0) {
+                printf("Altro client: invio messaggio...\n");
+                char warning_messagge[] = "Aspetta qualcuno sta giocando";
+                if (sendto(sockfd, warning_messagge, strlen(warning_messagge) + 1, 0, (struct sockaddr*)&cli_addr, clilen) < 0) {
+                    error("Error on writing");
+                }
+                continue;
+            }
+
+            if (atoi(buffer) == random_number) {
+                char msg[] = "Hai vinto";
+                if (sendto(sockfd, msg, strlen(msg)+1, 0, (struct sockaddr*)&actual_player, clilen) < 0) {
                     error("Error sending messagge");
                 }
+                win = 1;
+                break;
             }
+            else  {
+                n_try++;
+                if (n_try == 3) {
+                    char msg[] = "Hai perso";
+                    if (sendto(sockfd, msg, strlen(msg)+1, 0, (struct sockaddr*)&actual_player, clilen) < 0) {
+                        error("Error sending messagge");
+                    }
+                }
 
-            char * msg = "Riprova";
-            if (sendto(sockfd, msg, strlen(msg)+1, 0, (struct sockaddr*)&cli_addr, clilen) < 0) {
-                error("Error sending messagge");
+                char * msg = "Riprova";
+                if (sendto(sockfd, msg, strlen(msg)+1, 0, (struct sockaddr*)&actual_player, clilen) < 0) {
+                    error("Error sending messagge");
+                }
+
             }
-
+            
         }
-        
+        bzero((char*)&actual_player, clilen);
 
     }
-
     close(sockfd);
+
     return 0;
 
 }

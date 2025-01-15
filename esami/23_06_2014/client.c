@@ -25,11 +25,12 @@ void error(char *msg) {
  */
 int main(int argc, char *argv[]) {
 	int sockfd;
-	int portno, n;
+    int portno, n;
 	struct sockaddr_in serv_addr;
 	struct hostent *server; /* struttura dati per rappresentare gli host (nome, alias, indirizzo)*/
-	char buffer[256];
-
+	
+	char sendline[MAXLINE], recvline[MAXLINE+1];
+	
     if (argc < 3) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
        exit(0);
@@ -50,41 +51,26 @@ int main(int argc, char *argv[]) {
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr_list[0], (char *)&serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(portno); 
-		/* host-to-network short: converte un intero in un formato a 16 bit, indipendente dall'artchitettura
-		 big indian o little indian dell'host */
 
-	int n_try = 0;
+    
+    char buffer[MAXLINE];
+    bzero(buffer, MAXLINE);
+    printf("Inserisci messaggio: ");
+    scanf(" %255[^\n]", buffer);
 
-    while (n_try < 3) {
-        int number;
 
-        printf("Inserisci un numero: ");
-        scanf(" %d", &number);
-        bzero(buffer, 256);
-        sprintf(buffer, "%d", number);
-
-        if (sendto(sockfd, buffer, strlen(buffer)+1, 0, (struct sockaddr *)&serv_addr, (socklen_t)sizeof(serv_addr)) < 0) {
-            error("Error on send");
-        }
-
-        if (recvfrom(sockfd, buffer, 255, 0, NULL, NULL) < 0) {
-            error("Error on receive");
-        }
-
-        if (!strcmp(buffer, "Aspetta qualcuno sta giocando")) {
-            printf("Tentativo di un'altro client in corso. Riprova più tardi\n");
-            break;
-        }
-
-        if (!strcmp(buffer, "Hai vinto")) {
-            printf("%s\n", buffer);
-            break;
-        }
-
-        n_try++;
-        printf("%s\n", buffer);
-
+    if (sendto(sockfd, buffer, strlen(buffer) + 1, 0, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+        error("Error sending message");
     }
+
+    bzero(buffer, MAXLINE);
+
+
+    if (recvfrom(sockfd, buffer, MAXLINE - 1, 0, NULL, NULL) < 0) {
+        error("error");
+    }
+
+    printf("%s\n", buffer);
     close(sockfd);
-	return 0;
+
 }
